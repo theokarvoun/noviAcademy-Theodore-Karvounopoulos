@@ -5,12 +5,15 @@ namespace WorldRank
 {
     public class Program
     {
-        private static List<Player> players;
+        private static InMemoryPlayerRepository playerRepo;
+        private static InMemoryWalletRepository walletRepo;
+        private static int Id = 0;
         public static void Main(string[] args)
         {
-            players = new List<Player>();
+            playerRepo = new InMemoryPlayerRepository();
+            walletRepo = new InMemoryWalletRepository(playerRepo);
             int choice;
-            while ((choice = GetUserInput()) != 4)
+            while ((choice = GetUserInput()) != 8)
             {
                 switch (choice)
                 {
@@ -21,7 +24,19 @@ namespace WorldRank
                         ListPlayers();
                         break;
                     case 3:
-                        FindPlayerByName();
+                        FindPlayerById();
+                        break;
+                    case 4:
+                        DeletePlayer();
+                        break;
+                    case 5:
+                        GroupByScore();
+                        break;
+                    case 6:
+                        AddWalletToPlayer();
+                        break;
+                    case 7:
+                        ListWalletsForPlayer();
                         break;
                     default:
                         Console.WriteLine("Invalid choice. Please try again.");
@@ -30,12 +45,78 @@ namespace WorldRank
             }
 
         }
+        private static void GroupByScore()
+        {
+            var groupedPlayers = playerRepo.GroupPlayersByScore();
+            foreach (var group in groupedPlayers)
+            {
+                Console.WriteLine($"Score: {group.Key}");
+                foreach (var player in group)
+                {
+                    Console.WriteLine($" - {player}");
+                }
+            }
+        }
+        private static void AddWalletToPlayer()
+        {
+            Console.WriteLine("Give the player id to add wallet:");
+            if (int.TryParse(Console.ReadLine(), out int id))
+            {
+                Console.WriteLine("Select currency:");
+                Console.WriteLine("1. USD");
+                Console.WriteLine("2. EUR");
+                if (int.TryParse(Console.ReadLine(), out int currencyChoice))
+                {
+                    Wallet.Currency currency = currencyChoice switch
+                    {
+                        1 => Wallet.Currency.USD,
+                        2 => Wallet.Currency.EUR,
+                        _ => throw new ArgumentException("Invalid currency choice.")
+                    };
+                    Wallet newWallet = new Wallet(currency);
+                    walletRepo.Add(newWallet, id);
+                    //Console.WriteLine($"Wallet added to player with ID {id}.");
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a valid number for currency choice.");
+                }
+            }
+            
+        }
+        private static void ListWalletsForPlayer()
+        {
+            Console.WriteLine("Enter player id to list wallets:");
+            if (int.TryParse(Console.ReadLine(), out int id))
+            {
+                var wallets = walletRepo.GetByPlayer(id);
+                if (wallets.Count == 0)
+                {
+                    Console.WriteLine("No wallets found for this player.");
+                }
+                else
+                {
+                    foreach (var wallet in wallets)
+                    {
+                        Console.WriteLine($"Wallet Balance: {wallet.Balance}, Currency: {wallet.CurrencyType}, Is Blocked: {wallet.IsBlocked}");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Please enter a valid player ID.");
+            }
+        }
         private static int GetUserInput()
         {
             Console.WriteLine("1. Add Player");
             Console.WriteLine("2. List Players");
             Console.WriteLine("3. Find Player by Name");
-            Console.WriteLine("4. Exit");
+            Console.WriteLine("4. Remove Player");
+            Console.WriteLine("5. Group Players by Score");
+            Console.WriteLine("6. Add Wallet to Player");
+            Console.WriteLine("7. List Wallets for Player");
+            Console.WriteLine("8. Exit");
             if (int.TryParse(Console.ReadLine(), out int choice))
             {
                 return choice;
@@ -56,31 +137,30 @@ namespace WorldRank
                 Console.WriteLine("Name cannot be empty. Please try again.");
                 return;
             }
-            players.Add(new Player(name));
+            playerRepo.AddPlayer(new Player(name,Id++));
 
         }
         private static void ListPlayers()
         {
-            if (players.Count == 0)
+            if (playerRepo.Players.Count == 0)
             {
                 Console.WriteLine("No players found.");
                 return;
             }
-            foreach (var player in players)
+            foreach (var player in playerRepo.Players)
             {
                 Console.WriteLine(player);
             }
         }
-        private static void FindPlayerByName()
+        private static void FindPlayerById()
         {
-            Console.WriteLine("Enter player name to search:");
-            string? name = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(name))
+            Console.WriteLine("Enter player id to search:");
+            if (!int.TryParse(Console.ReadLine(),out int id))
             {
-                Console.WriteLine("Name cannot be empty. Please try again.");
+                Console.WriteLine("Id cannot be empty. Please try again.");
                 return;
             }
-            var foundPlayer = players.FirstOrDefault(p => p.Name == name);
+            var foundPlayer = playerRepo.FindPlayer(id);
             if (foundPlayer != null)
             {
                 Console.WriteLine($"Found: {foundPlayer}");
@@ -91,5 +171,19 @@ namespace WorldRank
                 Console.WriteLine("Player not found.");
             }
         }
-    }
+        private static void DeletePlayer()
+        {
+            Console.WriteLine("Enter id for player to delete:");
+            if (int.TryParse(Console.ReadLine(), out int playerId))
+            {
+                playerRepo.DeletePlayer(playerId);
+                Console.WriteLine("Player deleted.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Please enter a valid player ID.");
+            }
+        }
+
+        }
 }

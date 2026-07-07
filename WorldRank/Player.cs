@@ -1,19 +1,21 @@
 namespace WorldRank
 {
-    public class Player
+    public class Player : IPlayer
     {
-        public Guid Id { get; }
-        public string Name { get; private set; }
-        public int Score { get; private set; }
-        public Player(string name)
+        public int Id { get; }
+        public string Name { get; set; }
+        public int Score { get; set; }
+        public Dictionary<Wallet.Currency, Wallet> Wallets { get; set; }
+        public Player(string name, int Id)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentException("Name cannot be null or whitespace.", nameof(name));
             }
-            Id = Guid.NewGuid();
+            this.Id = Id;
             this.Name = name;
             Score = 0;
+            Wallets = new Dictionary<Wallet.Currency, Wallet>();
         }
         public void AddScore(int points)
         {
@@ -25,7 +27,7 @@ namespace WorldRank
         }
         public override string ToString()
         {
-            return $"Player: {Name}, Score: {Score}";
+            return $"Id: {Id}, Player: {Name}, Score: {Score}";
         }
     }
 }
