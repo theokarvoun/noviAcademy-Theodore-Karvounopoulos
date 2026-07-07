@@ -75,7 +75,6 @@ namespace WorldRank
                     };
                     Wallet newWallet = new Wallet(currency);
                     walletRepo.Add(newWallet, id);
-                    //Console.WriteLine($"Wallet added to player with ID {id}.");
                 }
                 else
                 {
@@ -98,7 +97,7 @@ namespace WorldRank
                 {
                     foreach (var wallet in wallets)
                     {
-                        Console.WriteLine($"Wallet Balance: {wallet.Balance}, Currency: {wallet.CurrencyType}, Is Blocked: {wallet.IsBlocked}");
+                        Console.WriteLine(wallet);
                     }
                 }
             }

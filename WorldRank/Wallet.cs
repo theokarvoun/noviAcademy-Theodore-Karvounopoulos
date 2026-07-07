@@ -22,6 +22,9 @@ namespace WorldRank
             }
             Balance += amount;
         }
-        
+        public override string ToString()
+        {
+            return $"Wallet Balance: {Balance}, Currency: {CurrencyType}, Is Blocked: {IsBlocked}";
+        }
     }
 }

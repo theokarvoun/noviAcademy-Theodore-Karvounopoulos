@@ -13,7 +13,7 @@ namespace WorldRank
         public void Add(Wallet wallet, int playerId)
         {
             Player p = PlayerRepo.Players.FirstOrDefault(p => p.Id == playerId);
-            if (p.Wallets.HasKey(wallet.CurrencyType))
+            if (p.Wallets.ContainsKey(wallet.CurrencyType))
             {
                 Console.WriteLine($"Wallet for currency {wallet.CurrencyType} already exists for player {p.Name}. Skipping addition.");
                 return;
@@ -22,7 +22,7 @@ namespace WorldRank
         }
         public List<Wallet> GetByPlayer(int playerId)
         {
-            return PlayerRepo.Players.FirstOrDefault(p => p.Id == playerId)?.Wallets.ToList() ?? new List<Wallet>();
+            return PlayerRepo.Players.FirstOrDefault(p => p.Id == playerId)?.Wallets.Values.ToList();
         }
         
     }
