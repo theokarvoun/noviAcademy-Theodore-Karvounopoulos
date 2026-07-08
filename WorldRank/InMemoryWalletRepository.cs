@@ -13,7 +13,7 @@ namespace WorldRank
         }
         public void Add(Wallet wallet, int playerId)
         {
-            Player? p = PlayerRepo.FindPlayer(playerId);
+            IPlayer? p = PlayerRepo.FindPlayer(playerId);
             if (p != null && p.GetWalletsDictionary().ContainsKey(wallet.CurrencyType))
             {
                 Console.WriteLine($"Wallet for currency {wallet.CurrencyType} already exists for player {p.Name}. Skipping addition.");

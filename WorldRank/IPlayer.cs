@@ -7,5 +7,7 @@ namespace WorldRank
         public int Score { get; }
         protected Dictionary<Currency,IWallet> Wallets { get; set; }
         public void AddScore(int points);
+        public Dictionary<Currency, IWallet> GetWalletsDictionary();
+        public List<IWallet> GetWallets();
     }
 }
