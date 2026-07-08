@@ -58,19 +58,20 @@ namespace WorldRank
             Console.WriteLine("Enter player id to add points:");
             if (int.TryParse(Console.ReadLine(),out int id))
             {
+                var player = playerRepo?.FindPlayer(id);
+                if (player == null)
+                {
+                    Console.WriteLine("Player not found.");
+                    return;
+                }
                 Console.WriteLine("Enter points to add:");
                 if (int.TryParse(Console.ReadLine(), out int points))
                 {
-                    var player = playerRepo?.FindPlayer(id);
-                    if (player != null)
-                    {
-                        player.AddScore(points);
-                        Console.WriteLine($"Added {points} points to player {player.Name}. New score: {player.Score}");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Player not found.");
-                    }
+                    
+                    
+                    player.AddScore(points);
+                    Console.WriteLine($"Added {points} points to player {player.Name}. New score: {player.Score}");
+                    
                 }
                 else
                 {
@@ -126,9 +127,14 @@ namespace WorldRank
             Console.WriteLine("Enter player id to list wallets:");
             if (int.TryParse(Console.ReadLine(), out int id))
             {
+                if (playerRepo?.FindPlayer(id) == null)
+                {
+                    Console.WriteLine("Player not found.");
+                    return null;
+                }
                 var wallets = walletRepo?.GetByPlayer(id);
                 if (wallets == null) { 
-                    Console.WriteLine("Player not found or no wallets available.");
+                    Console.WriteLine("No wallets available.");
                     return null;
                 }
                 if (wallets?.Count == 0)
@@ -208,6 +214,7 @@ namespace WorldRank
         private static void WithdrawOrDeposit()
         {
             var wallets = ListWalletsForPlayer();
+            
             Console.WriteLine("Select wallet: ");
             if (int.TryParse(Console.ReadLine(), out int selection))
             {
