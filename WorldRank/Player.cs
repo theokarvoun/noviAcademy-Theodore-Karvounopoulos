@@ -3,9 +3,15 @@ namespace WorldRank
     public class Player : IPlayer
     {
         public int Id { get; }
-        public string Name { get; set; }
-        public int Score { get; set; }
-        public Dictionary<Wallet.Currency, Wallet> Wallets { get; set; }
+        public string Name { get; private set; }
+        public int Score { get; private set; }
+        protected Dictionary<Currency, IWallet> Wallets { get; set; }
+        Dictionary<Currency, IWallet> IPlayer.Wallets { get => Wallets; set => Wallets = value; }
+
+        public List<IWallet> GetWallets()
+        {
+            return Wallets.Values.ToList();
+        }
         public Player(string name, int Id)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -15,7 +21,7 @@ namespace WorldRank
             this.Id = Id;
             this.Name = name;
             Score = 0;
-            Wallets = new Dictionary<Wallet.Currency, Wallet>();
+            Wallets = new Dictionary<Currency, IWallet>();
         }
         public void AddScore(int points)
         {
@@ -28,6 +34,11 @@ namespace WorldRank
         public override string ToString()
         {
             return $"Id: {Id}, Player: {Name}, Score: {Score}";
+        }
+
+        public Dictionary<Currency,IWallet>  GetWalletsDictionary()
+        {
+            return Wallets;
         }
     }
 }

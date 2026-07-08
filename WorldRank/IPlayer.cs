@@ -3,8 +3,9 @@ namespace WorldRank
     public interface IPlayer
     {
         public int Id { get; }
-        public string Name { get; protected set; }
-        public int Score { get; protected set; }
-        public Dictionary<Wallet.Currency,Wallet> Wallets { get; protected set; }
+        public string Name { get; }
+        public int Score { get; }
+        protected Dictionary<Currency,IWallet> Wallets { get; set; }
+        public void AddScore(int points);
     }
 }

@@ -1,19 +1,13 @@
 namespace WorldRank
 {
-    public class Wallet
+    public class Wallet : IWallet
     {
         public decimal Balance { get; private set; }
-        public enum Currency
-        {
-            USD,
-            EUR
-        }
+        
         public Currency CurrencyType { get; private set; }
         public bool IsBlocked { get; private set; }
-        public Wallet(Currency currency)
-        {
-            this.CurrencyType = currency;
-        }
+        public Wallet(Currency currency) => this.CurrencyType = currency;
+        
         public void Deposit(decimal amount)
         {
             if (amount <= 0)
@@ -22,9 +16,32 @@ namespace WorldRank
             }
             Balance += amount;
         }
+        public void Block() => IsBlocked = true;
+        public void UnBlock() => IsBlocked = false;
+        public void Withdraw(decimal amount)
+        {
+            if (IsBlocked)
+            {
+                throw new InvalidOperationException("Cannot withdraw from a blocked wallet.");
+            }
+            if (amount <= 0)
+            {
+                throw new ArgumentException("Withdrawal amount must be positive.", nameof(amount));
+            }
+            if (amount > Balance)
+            {
+                throw new InvalidOperationException("Insufficient funds for withdrawal.");
+            }
+            Balance -= amount;
+        }
         public override string ToString()
         {
             return $"Wallet Balance: {Balance}, Currency: {CurrencyType}, Is Blocked: {IsBlocked}";
         }
+    }
+    public enum Currency
+    {
+        USD,
+        EUR
     }
 }
