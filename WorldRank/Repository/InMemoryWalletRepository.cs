@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using WorldRank.Interfaces;
 
-namespace WorldRank
+namespace WorldRank.Repository
 {
     public class InMemoryWalletRepository : IWalletRepository
     {

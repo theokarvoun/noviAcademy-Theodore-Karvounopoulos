@@ -1,4 +1,4 @@
-namespace WorldRank
+namespace WorldRank.Interfaces
 {
     public interface IPlayer
     {

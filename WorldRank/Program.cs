@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using NLog;
+using System.Collections.Generic;
 using System.Linq;
+using WorldRank.Interfaces;
+using WorldRank.Repository;
 
 namespace WorldRank
 {
@@ -51,6 +54,7 @@ namespace WorldRank
                         break;
                 }
             }
+            LogManager.Shutdown();
 
         }
         private static void AddPointsToPlayer()

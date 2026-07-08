@@ -1,4 +1,6 @@
-namespace WorldRank
+using WorldRank.Interfaces;
+
+namespace WorldRank.Repository
 {
     public class InMemoryPlayerRepository : IPlayerRepository
     {

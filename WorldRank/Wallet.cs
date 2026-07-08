@@ -1,20 +1,30 @@
+using NLog;
+using WorldRank.Exceptions;
+using WorldRank.Interfaces;
+
 namespace WorldRank
 {
     public class Wallet : IWallet
     {
         public decimal Balance { get; private set; }
-        
+        Logger logger = LogManager.GetCurrentClassLogger();
         public Currency CurrencyType { get; private set; }
         public bool IsBlocked { get; private set; }
-        public Wallet(Currency currency) => this.CurrencyType = currency;
+        public Wallet(Currency currency) {
+            this.CurrencyType = currency;
+        }
         
         public void Deposit(decimal amount)
         {
             if (amount <= 0)
             {
+                logger.Error("Attempted to deposit negative amount");
                 throw new ArgumentException("Deposit amount must be positive.", nameof(amount));
+                
             }
             Balance += amount;
+            logger.Info($"Deposited {amount}");
+            
         }
         public void Block() => IsBlocked = true;
         public void UnBlock() => IsBlocked = false;
@@ -22,7 +32,7 @@ namespace WorldRank
         {
             if (IsBlocked)
             {
-                throw new InvalidOperationException("Cannot withdraw from a blocked wallet.");
+                throw new BlockedException("Cannot withdraw from a blocked wallet.");
             }
             if (amount <= 0)
             {
@@ -30,7 +40,7 @@ namespace WorldRank
             }
             if (amount > Balance)
             {
-                throw new InvalidOperationException("Insufficient funds for withdrawal.");
+                throw new InsufficientFundsException("Insufficient funds for withdrawal.");
             }
             Balance -= amount;
         }

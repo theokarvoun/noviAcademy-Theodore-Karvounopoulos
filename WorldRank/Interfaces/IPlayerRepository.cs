@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace WorldRank
+namespace WorldRank.Interfaces
 {
     public interface IPlayerRepository
     {

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using WorldRank;
 
-namespace WorldRank
+namespace WorldRank.Interfaces
 {
     public interface IWalletRepository
     {

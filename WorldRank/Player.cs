@@ -1,3 +1,5 @@
+using WorldRank.Interfaces;
+
 namespace WorldRank
 {
     public class Player : IPlayer
