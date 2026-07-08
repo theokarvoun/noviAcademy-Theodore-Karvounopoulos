@@ -10,52 +10,86 @@ namespace WorldRank
     {
         private static IPlayerRepository? playerRepo;
         private static IWalletRepository? walletRepo;
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         public static void Main()
         {
-            playerRepo = new InMemoryPlayerRepository();
-            walletRepo = new InMemoryWalletRepository(playerRepo);
-            int choice;
-            while ((choice = GetUserInput()) != 11)
+            logger.Info("Application starting.");
+            // Global unhandled exception logging
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                switch (choice)
+                logger.Fatal(e.ExceptionObject as Exception, "Unhandled domain exception");
+            };
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                logger.Fatal(e.Exception, "Unobserved task exception");
+                e.SetObserved();
+            };
+
+            playerRepo = new InMemoryPlayerRepository();
+            logger.Info("Player repository initialized.");
+            walletRepo = new InMemoryWalletRepository(playerRepo);
+            logger.Info("Wallet repository initialized.");
+
+            try
+            {
+                int choice;
+                while ((choice = GetUserInput()) != 11)
                 {
-                    case 1:
-                        AddPlayer();
-                        break;
-                    case 2:
-                        ListPlayers();
-                        break;
-                    case 3:
-                        FindPlayerById();
-                        break;
-                    case 4:
-                        DeletePlayer();
-                        break;
-                    case 5:
-                        GroupByScore();
-                        break;
-                    case 6:
-                        AddPointsToPlayer();
-                        break;
-                    case 7:
-                        ToggleWalletBlock();
-                        break;
-                    case 8:
-                        AddWalletToPlayer();
-                        break;
-                    case 9:
-                        ListWalletsForPlayer();
-                        break;
-                    case 10:
-                        WithdrawOrDeposit();
-                        break;
-                    default:
-                        Console.WriteLine("Invalid choice. Please try again.");
-                        break;
+                    switch (choice)
+                    {
+                        case 1:
+                            AddPlayer();
+                            break;
+                        case 2:
+                            ListPlayers();
+                            break;
+                        case 3:
+                            FindPlayerById();
+                            break;
+                        case 4:
+                            DeletePlayer();
+                            break;
+                        case 5:
+                            GroupByScore();
+                            break;
+                        case 6:
+                            AddPointsToPlayer();
+                            break;
+                        case 7:
+                            ToggleWalletBlock();
+                            break;
+                        case 8:
+                            try
+                            {
+                                AddWalletToPlayer();
+                            }
+                            catch (Exception e)
+                            {
+                                logger.Error(e, "Failed to add wallet to player.");
+                            }
+                            break;
+                        case 9:
+                            ListWalletsForPlayer();
+                            break;
+                        case 10:
+                            WithdrawOrDeposit();
+                            break;
+                        default:
+                            Console.WriteLine("Invalid choice. Please try again.");
+                            logger.Warn("User entered invalid menu choice.");
+                            break;
+                    }
                 }
             }
-            LogManager.Shutdown();
-
+            catch (Exception ex)
+            {
+                logger.Fatal(ex, "Unhandled exception in main loop.");
+            }
+            finally
+            {
+                logger.Info("Application shutting down.");
+                LogManager.Shutdown();
+            }
         }
         private static void AddPointsToPlayer()
         {
@@ -65,26 +99,35 @@ namespace WorldRank
                 var player = playerRepo?.FindPlayer(id);
                 if (player == null)
                 {
-                    Console.WriteLine("Player not found.");
+                    //Console.WriteLine("Player not found.");
+                    logger.Error("Player not found.");
                     return;
                 }
                 Console.WriteLine("Enter points to add:");
                 if (int.TryParse(Console.ReadLine(), out int points))
                 {
-                    
-                    
-                    player.AddScore(points);
-                    Console.WriteLine($"Added {points} points to player {player.Name}. New score: {player.Score}");
+
+                    try
+                    {
+                        player.AddScore(points);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e, "Failed to add points.");
+                    }
+                    //Console.WriteLine($"Added {points} points to player {player.Name}. New score: {player.Score}");
                     
                 }
                 else
                 {
-                    Console.WriteLine("Invalid input. Please enter a valid number for points.");
+                    logger.Warn("Invalid input. Please enter a valid number for points.");
+                    //Console.WriteLine("Invalid input. Please enter a valid number for points.");
                 }
             }
             else
             {
-                Console.WriteLine("Invalid input. Please enter a valid player ID.");
+                logger.Warn("Invalid input. Please enter a valid player ID.");
+                //Console.WriteLine("Invalid input. Please enter a valid player ID.");
             }
         }
         private static void GroupByScore()
@@ -105,6 +148,11 @@ namespace WorldRank
             Console.WriteLine("Give the player id to add wallet:");
             if (int.TryParse(Console.ReadLine(), out int id))
             {
+                if (playerRepo?.FindPlayer(id) == null)
+                {
+                    logger.Warn($"Player with id {id} was not found.");
+                    return;
+                }
                 Console.WriteLine("Select currency:");
                 Console.WriteLine("1. USD");
                 Console.WriteLine("2. EUR");
@@ -118,10 +166,12 @@ namespace WorldRank
                     };
                     Wallet newWallet = new Wallet(currency);
                     walletRepo?.Add(newWallet, id);
+                    //logger.Info($"Wallet {newWallet} added to player with id {id}");
                 }
                 else
                 {
-                    Console.WriteLine("Invalid input. Please enter a valid number for currency choice.");
+                    logger.Warn("Invalid input. Please enter a valid number for currency choice.");
+                    //Console.WriteLine("Invalid input. Please enter a valid number for currency choice.");
                 }
             }
             
@@ -133,32 +183,30 @@ namespace WorldRank
             {
                 if (playerRepo?.FindPlayer(id) == null)
                 {
-                    Console.WriteLine("Player not found.");
+                    logger.Info("Player not found.");
+                    //Console.WriteLine("Player not found.");
                     return null;
                 }
                 var wallets = walletRepo?.GetByPlayer(id);
-                if (wallets == null) { 
-                    Console.WriteLine("No wallets available.");
+                if (wallets == null || wallets.Count()==0) {
+                    logger.Info("No wallet available.");
+                    //Console.WriteLine("No wallets available.");
                     return null;
                 }
-                if (wallets?.Count == 0)
+                
+                
+                int i = 0;
+                foreach (var wallet in wallets)
                 {
-                    Console.WriteLine("No wallets found for this player.");
-                    return null;
+                    Console.WriteLine($"{++i}. {wallet}");
                 }
-                else if (wallets != null)
-                {
-                    int i = 0;
-                    foreach (var wallet in wallets)
-                    {
-                        Console.WriteLine($"{++i}. {wallet}");
-                    }
-                    return wallets;
-                }
+                return wallets;
+                
             }
             else
             {
-                Console.WriteLine("Invalid input. Please enter a valid player ID.");
+                logger.Warn("Invalid input. Please enter a valid player ID.");
+                //Console.WriteLine("Invalid input. Please enter a valid player ID.");
             }
             return null;
         }
@@ -218,7 +266,10 @@ namespace WorldRank
         private static void WithdrawOrDeposit()
         {
             var wallets = ListWalletsForPlayer();
-            
+            if (wallets == null)
+            {
+                return;
+            }
             Console.WriteLine("Select wallet: ");
             if (int.TryParse(Console.ReadLine(), out int selection))
             {
@@ -248,7 +299,7 @@ namespace WorldRank
                             }
                         } catch (Exception e)
                         {
-                            Console.WriteLine(e.Message);
+                            logger.Error(e,"Failed to withdraw or deposit.");
                         }
                     }
                 }
@@ -260,27 +311,29 @@ namespace WorldRank
             string? name = Console.ReadLine();
             if (string.IsNullOrWhiteSpace(name))
             {
-                Console.WriteLine("Name cannot be empty. Please try again.");
+                logger.Warn("Name cannot be empty. Please try again.");
                 return;
             }
             playerRepo?.AddPlayer(new Player(name,playerRepo.GenerateId()));
-
         }
         private static void ListPlayers()
         {
             if (playerRepo == null)
             {
-                Console.WriteLine("Player repository is not initialized.");
+                logger.Error("Player repository is not initialized.");
+                //Console.WriteLine("Player repository is not initialized.");
                 return;
             }
             if (playerRepo?.GetAll().Count == 0)
             {
-                Console.WriteLine("No players found.");
+                logger.Info("No players found.");
+                //Console.WriteLine("No players found.");
                 return;
             }
             if (playerRepo?.GetAll() == null)
             {
-                Console.WriteLine("Player list is null.");
+                logger.Info("Player list is null.");
+                //Console.WriteLine("Player list is null.");
                 return;
             }
             foreach (var player in playerRepo.GetAll())
@@ -294,7 +347,7 @@ namespace WorldRank
             Console.WriteLine("Enter player id to search:");
             if (!int.TryParse(Console.ReadLine(),out int id))
             {
-                Console.WriteLine("Id cannot be empty. Please try again.");
+                logger.Warn("Id cannot be empty. Please try again.");
                 return;
             }
             var foundPlayer = playerRepo?.FindPlayer(id);
@@ -305,7 +358,7 @@ namespace WorldRank
             }
             else
             {
-                Console.WriteLine("Player not found.");
+                logger.Warn("Player not found.");
             }
         }
         private static void DeletePlayer()
@@ -318,7 +371,8 @@ namespace WorldRank
             }
             else
             {
-                Console.WriteLine("Invalid input. Please enter a valid player ID.");
+                logger.Warn("Invalid input. Please enter a valid player ID.");
+                //Console.WriteLine("Invalid input. Please enter a valid player ID.");
             }
         }
 

@@ -1,3 +1,4 @@
+using NLog;
 using WorldRank.Interfaces;
 
 namespace WorldRank
@@ -8,6 +9,7 @@ namespace WorldRank
         public string Name { get; private set; }
         public int Score { get; private set; }
         protected Dictionary<Currency, IWallet> Wallets { get; set; }
+        private Logger logger = LogManager.GetCurrentClassLogger();
         Dictionary<Currency, IWallet> IPlayer.Wallets { get => Wallets; set => Wallets = value; }
 
         public List<IWallet> GetWallets()
@@ -32,6 +34,7 @@ namespace WorldRank
                 throw new ArgumentException("Points cannot be negative.", nameof(points));
             }
             Score += points;
+            //logger.Info($"Added {points} points to player {Name}. New score: {Score}");
         }
         public override string ToString()
         {

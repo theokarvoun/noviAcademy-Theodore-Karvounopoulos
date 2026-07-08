@@ -18,7 +18,7 @@ namespace WorldRank
         {
             if (amount <= 0)
             {
-                logger.Error("Attempted to deposit negative amount");
+                // Let caller handle logging of exceptions with full context
                 throw new ArgumentException("Deposit amount must be positive.", nameof(amount));
                 
             }
@@ -26,12 +26,21 @@ namespace WorldRank
             logger.Info($"Deposited {amount}");
             
         }
-        public void Block() => IsBlocked = true;
-        public void UnBlock() => IsBlocked = false;
+        public void Block()
+        {
+            IsBlocked = true;
+            logger.Info($"Wallet {this} blocked.");
+        }
+        public void UnBlock()
+        {
+            IsBlocked = false;
+            logger.Info($"Wallet {this} unblocked.");
+        }
         public void Withdraw(decimal amount)
         {
             if (IsBlocked)
             {
+                // Let caller log the exception with stack trace/context
                 throw new BlockedException("Cannot withdraw from a blocked wallet.");
             }
             if (amount <= 0)
@@ -43,6 +52,7 @@ namespace WorldRank
                 throw new InsufficientFundsException("Insufficient funds for withdrawal.");
             }
             Balance -= amount;
+            logger.Info($"Withdrawn {amount}");
         }
         public override string ToString()
         {

@@ -1,3 +1,4 @@
+using NLog;
 using WorldRank.Interfaces;
 
 namespace WorldRank.Repository
@@ -5,6 +6,7 @@ namespace WorldRank.Repository
     public class InMemoryPlayerRepository : IPlayerRepository
     {
         private int _id = 0;
+        private Logger logger = LogManager.GetCurrentClassLogger();
         public InMemoryPlayerRepository()
         {
             Players = new List<IPlayer>();
@@ -17,6 +19,7 @@ namespace WorldRank.Repository
         public void AddPlayer(IPlayer p)
         {
             Players.Add(p);
+            logger.Info($"Player added: {p}");
         }
         public IPlayer? FindPlayer(int playerId)
         {
