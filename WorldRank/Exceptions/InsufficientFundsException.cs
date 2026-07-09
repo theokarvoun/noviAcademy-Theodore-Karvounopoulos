@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WorldRank.Exceptions
+namespace WorldRank.Console.Exceptions
 {
-    internal class InsufficientFundsException : WalletException
-    {
-        public InsufficientFundsException() : base("This wallet has insufficient funds.")
-        {
+	public class InsufficientFundsException : WalletException
+	{
+		public decimal AttemptedBalance { get; }
 
-        }
-        public InsufficientFundsException(string message) : base(message)
-        {
-
-        }
-    }
+		public InsufficientFundsException(decimal attemptedBalance)
+			: base($"Insufficient funds: wallet balance cannot be negative (attempted balance: {attemptedBalance}).")
+		{
+			AttemptedBalance = attemptedBalance;
+		}
+	}
 }

@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WorldRank.Exceptions
+namespace WorldRank.Console.Exceptions
 {
-    internal class WalletException : Exception
-    {
-        public WalletException() : base("Wallet Exception")
-        {
+	public abstract class WalletException : Exception
+	{
+		protected WalletException(string message) : base(message)
+		{
+		}
 
-        }
-        public WalletException(string message) : base(message)
-        {
-
-        }
-    }
+		protected WalletException(string message, Exception innerException) : base(message, innerException)
+		{
+		}
+	}
 }
