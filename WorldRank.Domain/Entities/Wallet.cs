@@ -43,7 +43,16 @@ namespace WorldRank.Domain.Entities
 
 			Balance += amount;
 		}
+		
+		public void ForceSubtractFunds(decimal amount)
+		{
+            if (IsBlocked)
+                throw new WalletBlockedException(Currency);
 
+            var newBalance = Balance - amount;
+
+            Balance = newBalance;
+        }
 		public void Withdraw(decimal amount)
 		{
 			if (amount <= 0)

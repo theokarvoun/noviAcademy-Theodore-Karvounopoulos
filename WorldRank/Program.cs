@@ -1,12 +1,16 @@
 using NLog;
-using WorldRank.Application;
+using WorldRank.Application.Interfaces;
 using WorldRank.Infrastructure;
 using WorldRank.Domain.Entities;
 using WorldRank.Domain.Enums;
 using WorldRank.Domain.Exceptions;
+using Microsoft.Extensions.DependencyInjection;
+using WorldRank;
 
 var logger = LogManager.GetCurrentClassLogger();
-
+var services = new ServiceCollection();
+services.AddWorldRank();
+using var provider = services.BuildServiceProvider();
 //Wallets are stored in their own repository and reference the player via PlayerId
 IWalletRepository walletRepository = new InMemoryWalletRepository();
 IPlayerRepository playerRepository = new InMemoryPlayerRepository();

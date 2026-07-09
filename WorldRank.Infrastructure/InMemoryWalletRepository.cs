@@ -2,7 +2,7 @@ using NLog;
 using WorldRank.Domain.Enums;
 using WorldRank.Domain.Exceptions;
 using WorldRank.Domain.Entities;
-using WorldRank.Application;
+using WorldRank.Application.Interfaces;
 
 namespace WorldRank.Infrastructure
 {

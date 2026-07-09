@@ -1,6 +1,6 @@
 using NLog;
 using WorldRank.Domain.Entities;
-using WorldRank.Application;
+using WorldRank.Application.Interfaces;
 
 namespace WorldRank.Infrastructure
 {
