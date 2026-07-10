@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using WorldRank.Domain.Entities;
 
-namespace WorldRank.Application.Strategies
+namespace WorldRank.Application.Strategies;
+
+/// <summary>Subtracts funds even if the balance goes negative - chargebacks, penalties.</summary>
+public class ForceSubtractFundsStrategy : IFundsStrategy
 {
-    public class ForceSubtractFundsStrategy : IFundStrategy
-    {
-        public FundsOperation Operation => FundsOperation.ForceSubtract;
-        public void Execute(Wallet wallet, decimal amount)
-        {
-            wallet.ForceSubtractFunds(amount);
-        }
-    }
+    public FundsOperation Operation => FundsOperation.ForceSubtract;
+
+    public void Execute(Wallet wallet, decimal amount) => wallet.ForceSubtractFunds(amount);
 }

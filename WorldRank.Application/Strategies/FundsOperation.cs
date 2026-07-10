@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+namespace WorldRank.Application.Strategies;
 
-namespace WorldRank.Application.Strategies
+public enum FundsOperation
 {
-    public enum FundsOperation
-    {
-        Add,
-        Subtract,
-        ForceSubtract
-    }
+    Add,
+    Subtract,
+    ForceSubtract
 }
