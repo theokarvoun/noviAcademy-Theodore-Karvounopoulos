@@ -1,5 +1,6 @@
 using NLog;
 using WorldRank.Application.Interfaces;
+using WorldRank.Application.Services;
 using WorldRank.Application.Strategies;
 using WorldRank.Infrastructure;
 using WorldRank.Domain.Entities;
@@ -7,7 +8,6 @@ using WorldRank.Domain.Enums;
 using WorldRank.Domain.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using WorldRank;
-using WorldRank.Infrastructure;
 using WorldRank.Application.Services;
 
 var logger = LogManager.GetCurrentClassLogger();
@@ -17,7 +17,7 @@ using var provider = services.BuildServiceProvider();
 //Wallets are stored in their own repository and reference the player via PlayerId
 IWalletRepository walletRepository = provider.GetRequiredService<IWalletRepository>();
 IPlayerRepository playerRepository = provider.GetRequiredService<IPlayerRepository>();
-// All fund strategies are resolved as a collection; the handler picks the one whose Operation matches.
+// FundsService owns strategy selection internally; the handler just calls Execute.
 FundsService fundsService = provider.GetRequiredService<FundsService>();
 
 logger.Info("Application started.");
@@ -440,9 +440,11 @@ void ApplyFundsOperation()
 		return;
 	}
 
-    fundsService.Execute((Wallet)wallet, (decimal)amount, (FundsOperation)operation);
-    Console.WriteLine($"Operation applied: {wallet}");
-
+	RunWalletOperation(() =>
+	{
+		fundsService.Execute(wallet, amount.Value, operation.Value);
+		Console.WriteLine($"Operation applied. {wallet}");
+	});
 }
 
 #endregion Wallet Methods
