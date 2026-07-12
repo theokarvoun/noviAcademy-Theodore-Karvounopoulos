@@ -1,27 +1,26 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Text;
+using WorldRank.Application.Services;
 using WorldRank.Application.Strategies;
 
-namespace WorldRank.Application
+namespace WorldRank.Application;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        public static IServiceCollection AddApplication(this IServiceCollection services)
-        {
-            // All strategies are registered under the same interface. The caller resolves
-            // them as a collection and picks the one whose Operation matches - no factory.
-            services.AddSingleton<IFundStrategy, AddFundsStrategy>();
-            services.AddSingleton<IFundStrategy, SubtractFundsStrategy>();
-            services.AddSingleton<IFundStrategy, ForceSubtractFundsStrategy>();
+        // All strategies are registered under the same interface. The caller resolves
+        // them as a collection and picks the one whose Operation matches - no factory.
+        services.AddSingleton<IFundStrategy, AddFundsStrategy>();
+        services.AddSingleton<IFundStrategy, SubtractFundsStrategy>();
+        services.AddSingleton<IFundStrategy, ForceSubtractFundsStrategy>();
 
-            // Application services that drive the menu use-cases.
-            //services.AddSingleton<PlayerService>();
-           // services.AddSingleton<WalletService>();
+        // Switch-based funds service (alternative to resolving the IFundStrategy collection).
+        services.AddSingleton<FundsService>();
 
-            return services;
-        }
+        // Application services that drive the menu use-cases.
+        //services.AddSingleton<PlayerService>();
+        //services.AddSingleton<WalletService>();
+
+        return services;
     }
 }
