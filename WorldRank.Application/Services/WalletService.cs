@@ -2,10 +2,16 @@ using Microsoft.Extensions.Logging;
 using WorldRank.Application.Interfaces;
 using WorldRank.Application.Strategies;
 using WorldRank.Domain.Entities;
+using WorldRank.Domain.Enums;
 using WorldRank.Domain.Exceptions;
 
 namespace WorldRank.Application.Services;
 
+/// <summary>
+/// Application use-cases for wallets. Pure orchestration: it takes plain inputs,
+/// coordinates the repository and the funds strategies, and lets domain exceptions
+/// bubble up. It performs no console I/O - presentation is the delivery mechanism's job.
+/// </summary>
 public class WalletService
 {
 	private readonly IWalletRepository _walletRepository;
@@ -27,204 +33,61 @@ public class WalletService
 		_fundsStrategies = strategies.ToDictionary(strategy => strategy.Operation);
 	}
 
-	public void AddWalletToPlayer()
+	public Wallet AddWallet(int playerId, Currency currency, decimal initialBalance)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
+		if (_playerRepository.FindPlayer(playerId) is null)
+			throw new PlayerNotFoundException(playerId);
 
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		var balance = Prompts.PromptAmount("Initial balance");
-		if (balance is null)
-			return;
-
-		try
-		{
-			if (_playerRepository.FindPlayer(playerId.Value) is null)
-				throw new PlayerNotFoundException(playerId.Value);
-
-			var wallet = new Wallet(GenerateWalletId(), playerId.Value, currency.Value, balance.Value);
-			_walletRepository.Add(wallet);
-			Console.WriteLine("Wallet added successfully.");
-		}
-		catch (PlayerNotFoundException ex)
-		{
-			_logger.LogWarning(ex, "Could not add wallet, player {PlayerId} not found", playerId);
-			Console.WriteLine($"Error: {ex.Message}");
-		}
-		catch (WalletException ex)
-		{
-			_logger.LogWarning(ex, "Could not add wallet for player {PlayerId} in {Currency}", playerId, currency);
-			Console.WriteLine($"Error: {ex.Message}");
-		}
+		var wallet = new Wallet(GenerateWalletId(), playerId, currency, initialBalance);
+		_walletRepository.Add(wallet);
+		return wallet;
 	}
 
-	public void GetWalletsOfPlayer()
+	public IReadOnlyList<Wallet> GetWalletsOfPlayer(int playerId)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var wallets = _walletRepository.GetAllWalletsByPlayerId(playerId.Value);
-
-		if (wallets.Count == 0)
-		{
-			Console.WriteLine("No wallets found for this player.");
-			return;
-		}
-
-		foreach (var wallet in wallets)
-			Console.WriteLine($"Wallet Number {wallets.IndexOf(wallet)} {wallet}");
+		return _walletRepository.GetAllWalletsByPlayerId(playerId);
 	}
 
-	public void DepositToWallet()
+	public void Deposit(int playerId, Currency currency, decimal amount)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		var amount = Prompts.PromptAmount("Amount to deposit");
-		if (amount is null)
-			return;
-
-		RunWalletOperation(() =>
-		{
-			_walletRepository.Deposit(playerId.Value, currency.Value, amount.Value);
-			Console.WriteLine("Deposit successful.");
-		});
+		_walletRepository.Deposit(playerId, currency, amount);
 	}
 
-	public void WithdrawFromWallet()
+	public void Withdraw(int playerId, Currency currency, decimal amount)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		var amount = Prompts.PromptAmount("Amount to withdraw");
-		if (amount is null)
-			return;
-
-		RunWalletOperation(() =>
-		{
-			_walletRepository.Withdraw(playerId.Value, currency.Value, amount.Value);
-			Console.WriteLine("Withdrawal successful.");
-		});
+		_walletRepository.Withdraw(playerId, currency, amount);
 	}
 
-	public void BlockWallet()
+	public void Block(int playerId, Currency currency)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		RunWalletOperation(() =>
-		{
-			_walletRepository.Block(playerId.Value, currency.Value);
-			Console.WriteLine("Wallet blocked.");
-		});
+		_walletRepository.Block(playerId, currency);
 	}
 
-	public void UnblockWallet()
+	public void Unblock(int playerId, Currency currency)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		RunWalletOperation(() =>
-		{
-			_walletRepository.Unblock(playerId.Value, currency.Value);
-			Console.WriteLine("Wallet unblocked.");
-		});
+		_walletRepository.Unblock(playerId, currency);
 	}
 
-	public void UpdateWalletBalance()
+	public void UpdateBalance(int playerId, Currency currency, decimal newBalance)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		var newBalance = Prompts.PromptAmount("New balance");
-		if (newBalance is null)
-			return;
-
-		RunWalletOperation(() =>
-		{
-			_walletRepository.UpdateBalance(playerId.Value, currency.Value, newBalance.Value);
-			Console.WriteLine("Balance updated.");
-		});
+		_walletRepository.UpdateBalance(playerId, currency, newBalance);
 	}
 
-	public void ApplyFundsStrategy()
+	public void ApplyFundsOperation(int playerId, Currency currency, FundsOperation operation, decimal amount)
 	{
-		var playerId = Prompts.PromptPlayerId();
-		if (playerId is null)
-			return;
-
-		var currency = Prompts.PromptCurrency();
-		if (currency is null)
-			return;
-
-		var operation = Prompts.PromptFundsOperation();
-		if (operation is null)
-			return;
-
-		var amount = Prompts.PromptAmount("Amount");
-		if (amount is null)
-			return;
-
 		// Pick the strategy that matches the chosen operation (resolved from DI, no factory).
-		var strategy = _fundsStrategies[operation.Value];
+		var strategy = _fundsStrategies[operation];
 
-		RunWalletOperation(() =>
-		{
-			var wallet = _walletRepository.GetWallet(playerId.Value, currency.Value);
-			strategy.Execute(wallet, amount.Value);
-			_logger.LogInformation("Applied {Strategy} of {Amount} to player {PlayerId} {Currency} wallet (balance {Balance})",
-				strategy.GetType().Name, amount, playerId, currency, wallet.Balance);
-			Console.WriteLine($"{operation} operation applied.");
-		});
-	}
+		var wallet = _walletRepository.GetWallet(playerId, currency);
+		strategy.Execute(wallet, amount);
 
-	// Runs a wallet operation and turns any domain (WalletException) failure into a friendly message + log.
-	private void RunWalletOperation(Action operation)
-	{
-		try
-		{
-			operation();
-		}
-		catch (WalletException ex)
-		{
-			_logger.LogWarning(ex, "Wallet operation failed");
-			Console.WriteLine($"Error: {ex.Message}");
-		}
+		_logger.LogInformation("Applied {Strategy} of {Amount} to player {PlayerId} {Currency} wallet (balance {Balance})",
+			strategy.GetType().Name, amount, playerId, currency, wallet.Balance);
 	}
 
 	private int GenerateWalletId()
 	{
-		var existingIds = _walletRepository.GetAll().Select(p => p.Id).ToHashSet();
+		var existingIds = _walletRepository.GetAll().Select(wallet => wallet.Id).ToHashSet();
 
 		int id;
 		do

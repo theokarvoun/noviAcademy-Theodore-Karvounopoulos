@@ -40,6 +40,10 @@ public static class DependencyInjection
 			services.AddInfrastructure();
 		}
 
+		// Presentation layer: the console menus that drive the application use-cases.
+		services.AddSingleton<PlayerMenu>();
+		services.AddSingleton<WalletMenu>();
+
 		return services;
 	}
 }
