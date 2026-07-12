@@ -9,7 +9,13 @@ namespace WorldRank.Console;
 public static class DependencyInjection
 {
 	// Composition root: wires up every layer's services in one place.
-	public static IServiceCollection AddWorldRank(this IServiceCollection services)
+	// Flip useDatabase to switch between the in-memory and the EF Core (SQL Server)
+	// repositories. Nothing else in the app changes, because everything depends on the
+	// IPlayerRepository / IWalletRepository interfaces.
+	public static IServiceCollection AddWorldRank(
+		this IServiceCollection services,
+		bool useDatabase = false,
+		string? connectionString = null)
 	{
 		// Microsoft.Extensions.Logging with NLog as the provider, so components
 		// can receive an ILogger<T> through constructor injection.
@@ -21,7 +27,18 @@ public static class DependencyInjection
 		});
 
 		services.AddApplication();
-		services.AddInfrastructure();
+
+		if (useDatabase)
+		{
+			if (string.IsNullOrWhiteSpace(connectionString))
+				throw new ArgumentException("A connection string is required when useDatabase is true.", nameof(connectionString));
+
+			services.AddInfrastructureDatabase(connectionString);
+		}
+		else
+		{
+			services.AddInfrastructure();
+		}
 
 		return services;
 	}
