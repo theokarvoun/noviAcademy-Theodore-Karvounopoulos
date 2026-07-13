@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using WorldRank.Application.Interfaces;
 using WorldRank.Domain.Entities;
@@ -14,14 +15,32 @@ public class DBPlayerRepository : IPlayerRepository
 {
 	private readonly WorldRankDBContext _context;
 	private readonly ILogger<DBPlayerRepository> _logger;
+	private readonly IMemoryCache _cache;
 
-	public DBPlayerRepository(WorldRankDBContext context, ILogger<DBPlayerRepository> logger)
+	public DBPlayerRepository(WorldRankDBContext context, ILogger<DBPlayerRepository> logger, IMemoryCache cache)
 	{
 		_context = context;
 		_logger = logger;
+		_cache = cache;
 	}
 
-	public void AddPlayer(Player player)
+    public IEnumerable<Player> GetAll()
+    {
+        if (_cache.TryGetValue("AllPlayersKey", out IReadOnlyList<Player>? cached) && cached is not null)
+        {
+            _logger.LogInformation("Cache HIT  all players");
+            return cached;
+        }
+
+        _logger.LogInformation("Cache MISS all players — loading from database");
+        var players = GetAllPlayers().ToList();
+
+        _cache.Set("AllPlayersKey", players, TimeSpan.FromSeconds(60));
+
+        return players;
+    }
+
+    public void AddPlayer(Player player)
 	{
 		_context.Players.Add(player);
 		_context.SaveChanges();
