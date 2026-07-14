@@ -1,4 +1,4 @@
-using WorldRank.Application.Services;
+using WorldRank.Application.Interfaces;
 
 namespace WorldRank.Console;
 
@@ -9,9 +9,9 @@ namespace WorldRank.Console;
 /// </summary>
 public class WalletMenu
 {
-	private readonly WalletService _walletService;
+	private readonly IWalletService _walletService;
 
-	public WalletMenu(WalletService walletService)
+	public WalletMenu(IWalletService walletService)
 	{
 		_walletService = walletService;
 	}

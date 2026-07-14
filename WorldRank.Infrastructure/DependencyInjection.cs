@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WorldRank.Application.Interfaces;
+using WorldRank.Infrastructure.Caching;
+using WorldRank.Infrastructure.Persistence;
 using WorldRank.Infrastructure.Persistence.Context;
 using WorldRank.Infrastructure.Repositories;
 
@@ -15,6 +17,21 @@ public static class DependencyInjection
 	{
 		services.AddSingleton<IPlayerRepository, InMemoryPlayerRepository>();
 		services.AddSingleton<IWalletRepository, InMemoryWalletRepository>();
+
+		services.AddCaching();
+
+		return services;
+	}
+
+	/// <summary>
+	/// Registers the in-memory cache and the ICache port implementation. The Application
+	/// services depend only on ICache; the IMemoryCache-backed MemoryCacheStore is the
+	/// swappable Infrastructure detail (Redis would replace it here).
+	/// </summary>
+	private static IServiceCollection AddCaching(this IServiceCollection services)
+	{
+		services.AddMemoryCache();
+		services.AddSingleton<ICache, MemoryCacheStore>();
 
 		return services;
 	}
@@ -36,6 +53,11 @@ public static class DependencyInjection
 
 		services.AddSingleton<IPlayerRepository, DBPlayerRepository>();
 		services.AddSingleton<IWalletRepository, DBWalletRepository>();
+
+		services.AddCaching();
+
+		// Day 5 helper: raw-SQL batch upsert via Dapper, sharing the same connection string.
+		services.AddSingleton(new WalletBulkUpsert(connectionString));
 
 		return services;
 	}

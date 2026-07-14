@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using WorldRank.Application.Interfaces;
 using WorldRank.Application.Services;
 using WorldRank.Application.Strategies;
 
@@ -14,9 +15,10 @@ public static class DependencyInjection
 		services.AddSingleton<IFundsStrategy, SubtractFundsStrategy>();
 		services.AddSingleton<IFundsStrategy, ForceSubtractFundsStrategy>();
 
-		// Application services that drive the menu use-cases.
-		services.AddSingleton<PlayerService>();
-		services.AddSingleton<WalletService>();
+		// Application services that drive the use-cases. Consumers depend on the
+		// interfaces; the concrete services own the cache-aside / write-through logic.
+		services.AddSingleton<IPlayerService, PlayerService>();
+		services.AddSingleton<IWalletService, WalletService>();
 
 		return services;
 	}

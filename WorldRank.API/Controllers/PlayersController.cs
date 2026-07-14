@@ -1,57 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using WorldRank.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+using WorldRank.API.DTOs;
+using WorldRank.Application.Interfaces;
 using WorldRank.Domain.Entities;
 
-namespace WorldRank.API.Controllers
+namespace WorldRank.API.Controllers;
+
+[ApiController]
+[Route("players")]
+public class PlayersController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class PlayersController : ControllerBase
-    {
-        private readonly PlayerService _playerService;
+	private readonly IPlayerService _players;
 
-        public PlayersController(PlayerService playerService)
-        {
-            _playerService = playerService;
-        }
+	public PlayersController(IPlayerService players) => _players = players;
 
-        [HttpGet]
-        public IActionResult GetAll()
-        {
-            try
-            {
-                var result = _playerService
-                    .GetAllPlayers()
-                    .ToList();
+	// POST /players — create a player (the service writes through to the cache).
+	[HttpPost]
+	public IActionResult Create([FromBody] CreatePlayerRequest request)
+	{
+		Player player;
+		try
+		{
+			player = _players.AddPlayer(request.Name, request.Score);
+		}
+		catch (ArgumentException ex)
+		{
+			// Empty name / negative score → 400.
+			return BadRequest(new { error = ex.Message });
+		}
 
-                if (result.Count == 0)
-                    return NotFound();
+		return CreatedAtAction(nameof(GetById), new { id = player.Id }, PlayerResponse.From(player));
+	}
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+	// GET /players/{id} — 200 or 404 (caching handled by the service).
+	[HttpGet("{id:int}")]
+	public IActionResult GetById(int id)
+	{
+		var player = _players.FindPlayerById(id);
+		return player is null ? NotFound() : Ok(PlayerResponse.From(player));
+	}
 
-        [HttpGet("{playerId:int}")]
-        public IActionResult GetPlayerById(int playerId)
-        {
-            try
-            {
-                var result = _playerService.FindPlayerById(playerId);
-
-                if (result is null)
-                    return NotFound();
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-    }
+	// GET /players — list all players (cached).
+	[HttpGet]
+	public IActionResult GetAll()
+	{
+		var players = _players.GetAllPlayers();
+		return Ok(players.Select(PlayerResponse.From));
+	}
 }

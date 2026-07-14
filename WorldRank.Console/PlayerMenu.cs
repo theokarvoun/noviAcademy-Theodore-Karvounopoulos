@@ -1,4 +1,4 @@
-using WorldRank.Application.Services;
+using WorldRank.Application.Interfaces;
 
 namespace WorldRank.Console;
 
@@ -9,9 +9,9 @@ namespace WorldRank.Console;
 /// </summary>
 public class PlayerMenu
 {
-	private readonly PlayerService _playerService;
+	private readonly IPlayerService _playerService;
 
-	public PlayerMenu(PlayerService playerService)
+	public PlayerMenu(IPlayerService playerService)
 	{
 		_playerService = playerService;
 	}

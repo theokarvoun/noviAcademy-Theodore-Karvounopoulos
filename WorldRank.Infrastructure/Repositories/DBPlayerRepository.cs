@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using WorldRank.Application.Interfaces;
 using WorldRank.Domain.Entities;
@@ -10,37 +9,21 @@ namespace WorldRank.Infrastructure.Repositories;
 /// <summary>
 /// Entity Framework Core backed implementation of <see cref="IPlayerRepository"/>.
 /// Mirrors the behaviour of <see cref="InMemoryPlayerRepository"/> but persists to a database.
+/// Caching is NOT done here: it lives in the Application's PlayerService behind the ICache
+/// port, so the caching technology stays out of the Infrastructure repositories.
 /// </summary>
 public class DBPlayerRepository : IPlayerRepository
 {
 	private readonly WorldRankDBContext _context;
 	private readonly ILogger<DBPlayerRepository> _logger;
-	private readonly IMemoryCache _cache;
 
-	public DBPlayerRepository(WorldRankDBContext context, ILogger<DBPlayerRepository> logger, IMemoryCache cache)
+	public DBPlayerRepository(WorldRankDBContext context, ILogger<DBPlayerRepository> logger)
 	{
 		_context = context;
 		_logger = logger;
-		_cache = cache;
 	}
 
-    public IEnumerable<Player> GetAll()
-    {
-        if (_cache.TryGetValue("AllPlayersKey", out IReadOnlyList<Player>? cached) && cached is not null)
-        {
-            _logger.LogInformation("Cache HIT  all players");
-            return cached;
-        }
-
-        _logger.LogInformation("Cache MISS all players — loading from database");
-        var players = GetAllPlayers().ToList();
-
-        _cache.Set("AllPlayersKey", players, TimeSpan.FromSeconds(60));
-
-        return players;
-    }
-
-    public void AddPlayer(Player player)
+	public void AddPlayer(Player player)
 	{
 		_context.Players.Add(player);
 		_context.SaveChanges();
