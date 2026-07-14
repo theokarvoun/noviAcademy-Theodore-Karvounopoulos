@@ -1,7 +1,6 @@
 <Solution>
-  <Project Path="WorldRank.API/WorldRank.API.csproj" Id="30856ba0-7ba5-40d5-ad1c-01e915ab2df2" />
-  <Project Path="WorldRank.Application/WorldRank.Application.csproj" />
-  <Project Path="WorldRank.Console/WorldRank.Console.csproj" />
-  <Project Path="WorldRank.Domain/WorldRank.Domain.csproj" />
-  <Project Path="WorldRank.Infrastructure/WorldRank.Infrastructure.csproj" />
+  <Project Path="NoviCode.Api/NoviCode.Api.csproj" />
+  <Project Path="NoviCode.Application/NoviCode.Application.csproj" />
+  <Project Path="NoviCode.Domain/NoviCode.Domain.csproj" />
+  <Project Path="NoviCode.Infrastructure/NoviCode.Infrastructure.csproj" />
 </Solution>
