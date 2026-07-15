@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
 
 	public DbSet<Player> Players => Set<Player>();
 	public DbSet<Wallet> Wallets => Set<Wallet>();
+	public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
@@ -29,6 +30,15 @@ public class AppDbContext : DbContext
 			entity.Property(w => w.Currency).HasConversion<string>().HasMaxLength(3);
 			entity.Property(w => w.Balance).HasPrecision(18, 2);
 			entity.Property(w => w.IsBlocked);
+		});
+
+		modelBuilder.Entity<CurrencyRate>(entity =>
+		{
+			entity.ToTable("CurrencyRates");
+			entity.HasKey(r => r.Id);
+			entity.Property(r => r.Currency).IsRequired().HasMaxLength(3);
+			entity.Property(r => r.Rate).HasPrecision(18, 6);
+			entity.Property(r => r.Date).IsRequired();
 		});
 	}
 }

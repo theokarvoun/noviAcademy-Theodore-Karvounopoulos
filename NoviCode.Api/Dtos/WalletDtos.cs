@@ -7,10 +7,6 @@ public record CreateWalletRequest(Guid PlayerId, Currency Currency);
 
 public record DepositRequest(decimal Amount);
 
-public record ApplyFundsRequest(decimal Amount, FundsOperation Operation);
-
-public record SetBlockedRequest(bool Blocked);
-
 // Response DTO — the shape the client receives. Never expose the domain entity directly.
 public record WalletResponse(Guid Id, Guid PlayerId, string Currency, decimal Balance, bool IsBlocked)
 {

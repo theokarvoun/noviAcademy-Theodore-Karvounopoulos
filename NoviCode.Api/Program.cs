@@ -4,6 +4,9 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using NLog.Extensions.Logging;
 using NoviCode;
+using NoviCode.Gateway;
+using NoviCode.Jobs;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +48,19 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient<IEcbHttpClient, EcbHttpClient>();
 
+builder.Services.AddQuartz(q =>
+{
+	var jobkey = new JobKey(nameof(DataFetchJob));
+	q.AddJob<DataFetchJob>(jobkey);
+	q.AddTrigger(t => t
+	.ForJob(jobkey)
+	.WithIdentity($"{nameof(DataFetchJob)} -trigger")
+	.WithCronSchedule("0/5 * * * * ?"));
+});
+
+builder.Services.AddQuartzHostedService();
 
 var app = builder.Build();
 

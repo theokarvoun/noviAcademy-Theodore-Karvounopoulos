@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NoviCode.Commands.Players;
-using NoviCode.Queries.Players;
 
 namespace NoviCode.Api;
 
@@ -9,18 +8,23 @@ namespace NoviCode.Api;
 [Route("players")]
 public class PlayersController : ControllerBase
 {
+	private readonly IPlayerService _players;
 	private readonly IMediator _mediator;
 
-	public PlayersController(IMediator mediator) => _mediator = mediator;
+	public PlayersController(IPlayerService players, IMediator mediator)
+	{
+        _players = players;
+		_mediator = mediator;
+    }
 
-	// POST /players — create a player. Caching + logging are applied by decorators, not here.
+	// POST /players — create a player (the decorator writes through to the cache).
 	[HttpPost]
 	public async Task<IActionResult> Create([FromBody] CreatePlayerRequest request, CancellationToken cancellationToken)
 	{
 		Guid id;
 		try
 		{
-			id = await _mediator.Send(new CreatePlayerCommand(request.Name, request.Score), cancellationToken);
+			id = await _mediator.Send(new CreatePlayerCommand(request.Name, request.Score));
 		}
 		catch (ArgumentException ex)
 		{
@@ -28,22 +32,22 @@ public class PlayersController : ControllerBase
 			return BadRequest(new { error = ex.Message });
 		}
 
-		return Created($"/players/{id}", null);
+		return CreatedAtAction(nameof(GetById), new { id = id });
 	}
 
-	// GET /players/{id} — 200 or 404.
-	[HttpGet("{id:guid}", Name = "GetPlayerById")]
+	// GET /players/{id} — 200 or 404 (caching handled by the decorator).
+	[HttpGet("{id:guid}")]
 	public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
 	{
-		var player = await _mediator.Send(new GetPlayerByIdQuery(id), cancellationToken);
+		var player = await _players.GetByIdAsync(id, cancellationToken);
 		return player is null ? NotFound() : Ok(PlayerResponse.From(player));
 	}
 
-	// GET /players — list all players.
+	// GET /players — list all players (cached).
 	[HttpGet]
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
 	{
-		var players = await _mediator.Send(new GetAllPlayersQuery(), cancellationToken);
+		var players = await _players.GetAllAsync(cancellationToken);
 		return Ok(players.Select(PlayerResponse.From));
 	}
 }
