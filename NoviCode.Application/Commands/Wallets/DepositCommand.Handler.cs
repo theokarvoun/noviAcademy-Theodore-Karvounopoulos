@@ -1,26 +1,30 @@
 using MediatR;
-using NoviCode.Infrastructure;
+using NoviCode.Dtos;
+using NoviCode.Services.Infrastructure;
 
-namespace NoviCode.Commands.Wallets
+namespace NoviCode.Commands.Wallets;
+
+public class DepositCommandHandler : IRequestHandler<DepositCommand, WalletDto?>
 {
-    public class DepositCommandHandler : IRequestHandler<DepositCommand, Wallet?>
-    {
-        private readonly IWalletMutationPersistence _persistence;
+	private readonly IGetWalletPersistence _getWalletPersistence;
+	private readonly IUpdateWalletPersistence _updateWalletPersistence;
 
-        public DepositCommandHandler(IWalletMutationPersistence persistence)
-        {
-            _persistence = persistence;
-        }
+	public DepositCommandHandler(IGetWalletPersistence getWalletPersistence, IUpdateWalletPersistence updateWalletPersistence)
+	{
+		_getWalletPersistence = getWalletPersistence;
+		_updateWalletPersistence = updateWalletPersistence;
+	}
 
-        public async Task<Wallet?> Handle(DepositCommand request, CancellationToken cancellationToken)
-        {
-            var wallet = await _persistence.GetForUpdate(request.WalletId);
-            if (wallet is null)
-                return null;
+	public async Task<WalletDto?> Handle(DepositCommand request, CancellationToken cancellationToken)
+	{
+		var wallet = await _getWalletPersistence.TryGet(request.WalletId);
+		if (wallet is null)
+			return null;
 
-            wallet.Deposit(request.Amount); // may throw WalletBlockedException / InvalidAmountException
-            await _persistence.Save(wallet);
-            return wallet;
-        }
-    }
+		wallet.Deposit(request.Amount); // may throw WalletBlockedException / InvalidAmountException
+
+		await _updateWalletPersistence.Update(wallet);
+
+		return WalletDto.From(wallet);
+	}
 }

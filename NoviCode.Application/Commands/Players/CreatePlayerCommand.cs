@@ -1,9 +1,7 @@
-﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using MediatR;
+using NoviCode.Dtos;
 
-namespace NoviCode.Commands.Players
-{
-    public record CreatePlayerCommand(string name, int score) : IRequest<Guid>;
-}
+namespace NoviCode.Commands.Players;
+
+// Command: create a player. Returns the created player.
+public record CreatePlayerCommand(string Name, int Score) : IRequest<PlayerDto>;

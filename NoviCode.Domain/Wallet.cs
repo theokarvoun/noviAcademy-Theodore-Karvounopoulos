@@ -8,16 +8,18 @@ public class Wallet
 	public decimal Balance { get; private set; }
 	public bool IsBlocked { get; private set; }
 
-	public Wallet(Guid playerId, Currency currency)
+	public Wallet(Guid id, Guid playerId, Currency currency, decimal balance, bool isBlocked)
 	{
-		Id = Guid.NewGuid();
+		Id = id;
 		PlayerId = playerId;
 		Currency = currency;
+		Balance = balance;
+		IsBlocked = isBlocked;
 	}
 
-	// Parameterless ctor used only by EF Core to materialise rows (properties set via backing fields).
-	private Wallet()
+	public static Wallet CreateNew(Guid id, Guid playerId, Currency currency)
 	{
+		return new Wallet(id, playerId, currency, 0m, false);
 	}
 
 	// Balance is encapsulated: it changes only through Deposit / Withdraw — never set from outside.
@@ -55,8 +57,11 @@ public class Wallet
 		Balance -= amount;
 	}
 
-	public void Block() => IsBlocked = true;
-	public void Unblock() => IsBlocked = false;
+	public void Block()
+		=> IsBlocked = true;
+
+	public void Unblock()
+		=> IsBlocked = false;
 
 	public override string ToString() =>
 		$"[{Id}] {Currency} {Balance:0.00}{(IsBlocked ? " (blocked)" : string.Empty)}";

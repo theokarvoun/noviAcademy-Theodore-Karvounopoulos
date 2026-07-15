@@ -1,20 +1,22 @@
-using NoviCode.Infrastructure;
+using NoviCode.Persistence.Context;
+using NoviCode.Services.Infrastructure;
 
 namespace NoviCode.Persistence.Commands.Wallets
 {
-    public class CreateWalletPersistence : ICreateWalletPersistence
-    {
-        private readonly AppDbContext _appDbContext;
+	public class CreateWalletPersistence : ICreateWalletPersistence
+	{
+		private readonly AppDbContext _db;
 
-        public CreateWalletPersistence(AppDbContext appDbContext)
-        {
-            _appDbContext = appDbContext;
-        }
+		public CreateWalletPersistence(AppDbContext db)
+		{
+			_db = db;
+		}
 
-        public async Task Persist(Wallet wallet)
-        {
-            _appDbContext.Add(wallet);
-            await _appDbContext.SaveChangesAsync();
-        }
-    }
+		public async Task Add(Wallet wallet)
+		{
+			_db.Wallets.Add(wallet);
+
+			await _db.SaveChangesAsync();
+		}
+	}
 }

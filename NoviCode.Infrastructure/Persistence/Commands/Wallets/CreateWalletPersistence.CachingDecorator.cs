@@ -1,32 +1,24 @@
-using NoviCode.Infrastructure;
+using NoviCode.Caching;
+using NoviCode.Services.Infrastructure;
 
 namespace NoviCode.Persistence.Commands.Wallets
 {
-    // Write-through on create: cache the new wallet under its own key and invalidate the two
-    // list views (all wallets + this player's wallets) so the next read rebuilds them.
-    public class CreateWalletPersistenceCachingDecorator : ICreateWalletPersistence
-    {
-        private static readonly TimeSpan Ttl = TimeSpan.FromSeconds(60);
-        private const string AllWalletsKey = "wallets:all";
-        private static string WalletKey(Guid id) => $"wallet:{id}";
-        private static string PlayerWalletsKey(Guid playerId) => $"wallets:player:{playerId}";
+	public class CreateWalletPersistenceCachingDecorator : ICreateWalletPersistence
+	{
+		private readonly IWalletsCache _cache;
+		private readonly ICreateWalletPersistence _inner;
 
-        private readonly ICreateWalletPersistence _inner;
-        private readonly ICache _cache;
+		public CreateWalletPersistenceCachingDecorator(IWalletsCache cache, ICreateWalletPersistence inner)
+		{
+			_cache = cache;
+			_inner = inner;
+		}
 
-        public CreateWalletPersistenceCachingDecorator(ICreateWalletPersistence inner, ICache cache)
-        {
-            _inner = inner;
-            _cache = cache;
-        }
+		public async Task Add(Wallet wallet)
+		{
+			await _inner.Add(wallet);
 
-        public async Task Persist(Wallet wallet)
-        {
-            await _inner.Persist(wallet);
-
-            _cache.Set(WalletKey(wallet.Id), wallet, Ttl);
-            _cache.Remove(AllWalletsKey);
-            _cache.Remove(PlayerWalletsKey(wallet.PlayerId));
-        }
-    }
+			_cache.AddOrUpdateWallet(wallet);
+		}
+	}
 }

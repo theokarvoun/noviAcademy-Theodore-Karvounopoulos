@@ -6,20 +6,19 @@ public class Player
 	public string Name { get; }
 	public int Score { get; private set; }
 
+	private Player(Guid id, string name, int score)
+	{
+		Id = id;
+		Name = name;
+		Score = score;
+	}
 
-    private Player(Guid id, string name, int score)
-    {
-        Id = id;
-        Name = name;
-        Score = score;
-    }
-
-    public static Player CreateNew(string name)
+	public static Player CreateNew(Guid id, string name, int score)
 	{
 		if (string.IsNullOrWhiteSpace(name))
 			throw new ArgumentException("Name cannot be null or empty.", nameof(name));
 
-		return new Player(Guid.NewGuid(), name, 0);
+		return new Player(id, name, score);
 	}
 
 	public void UpdateScore(int newScore)

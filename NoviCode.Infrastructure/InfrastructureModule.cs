@@ -1,37 +1,68 @@
-using Autofac;
-using NoviCode.Infrastructure;
+﻿using Autofac;
+using NoviCode.Caching;
 using NoviCode.Persistence.Commands.Players;
 using NoviCode.Persistence.Commands.Wallets;
 using NoviCode.Persistence.Queries.Players;
 using NoviCode.Persistence.Queries.Wallets;
+using NoviCode.Services.Infrastructure;
 
 namespace NoviCode
 {
-    // Each write/read port is registered as its concrete persistence class, then wrapped by a
-    // caching decorator. The handlers depend only on the port, so caching stays invisible to them.
-    public class InfrastructureModule : Autofac.Module
-    {
-        protected override void Load(ContainerBuilder builder)
-        {
-            // --- Players: create (command) ---
-            builder.RegisterType<CreatePlayerPersistence>().As<ICreatePlayerPersistence>().InstancePerLifetimeScope();
-            builder.RegisterDecorator(typeof(CreatePlayersPersistenceCachingDecorator), typeof(ICreatePlayerPersistence));
+	public class InfrastructureModule : Autofac.Module
+	{
+		protected override void Load(ContainerBuilder builder)
+		{
+			// Players
 
-            // --- Players: reads (queries) ---
-            builder.RegisterType<PlayerReadPersistence>().As<IPlayerReadPersistence>().InstancePerLifetimeScope();
-            builder.RegisterDecorator(typeof(PlayerReadPersistenceCachingDecorator), typeof(IPlayerReadPersistence));
+			builder.RegisterType<CreatePlayerPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
 
-            // --- Wallets: create (command) ---
-            builder.RegisterType<CreateWalletPersistence>().As<ICreateWalletPersistence>().InstancePerLifetimeScope();
-            builder.RegisterDecorator(typeof(CreateWalletPersistenceCachingDecorator), typeof(ICreateWalletPersistence));
+			builder.RegisterType<GetPlayerPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
 
-            // --- Wallets: mutations — deposit / block / apply funds (commands) ---
-            builder.RegisterType<WalletMutationPersistence>().As<IWalletMutationPersistence>().InstancePerLifetimeScope();
-            builder.RegisterDecorator(typeof(WalletMutationPersistenceCachingDecorator), typeof(IWalletMutationPersistence));
+			builder.RegisterType<GetAllPlayersPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
 
-            // --- Wallets: reads (queries) ---
-            builder.RegisterType<WalletReadPersistence>().As<IWalletReadPersistence>().InstancePerLifetimeScope();
-            builder.RegisterDecorator(typeof(WalletReadPersistenceCachingDecorator), typeof(IWalletReadPersistence));
-        }
-    }
+			builder.RegisterType<UpdatePlayerScorePersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
+
+			builder.RegisterType<DeletePlayerPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
+
+			builder.RegisterDecorator<CreatePlayerPersistenceChachingDecorator, ICreatePlayerPersistence>();
+			builder.RegisterDecorator<GetPlayerPersistenceCachingDecorator, IGetPlayerPersistence>();
+			builder.RegisterDecorator<UpdatePlayerScorePersistenceCachingDecorator, IUpdatePlayerScorePersistence>();
+			builder.RegisterDecorator<DeletePlayerPersistenceCachingDecorator, IDeletePlayerPersistence>();
+
+			builder.RegisterType<PlayersCache>()
+				.AsImplementedInterfaces()
+				.SingleInstance();
+
+			// Wallets
+			builder.RegisterType<CreateWalletPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
+
+			builder.RegisterType<GetWalletPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
+
+			builder.RegisterType<UpdateWalletPersistence>()
+				.AsImplementedInterfaces()
+				.InstancePerLifetimeScope();
+
+			builder.RegisterDecorator<CreateWalletPersistenceCachingDecorator, ICreateWalletPersistence>();
+			builder.RegisterDecorator<GetWalletPersistenceCachingDecorator, IGetWalletPersistence>();
+			builder.RegisterDecorator<UpdateWalletPersistenceCachingDecorator, IUpdateWalletPersistence>();
+
+			builder.RegisterType<WalletsCache>()
+				.AsImplementedInterfaces()
+				.SingleInstance();
+		}
+	}
 }

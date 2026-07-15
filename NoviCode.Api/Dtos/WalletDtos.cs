@@ -7,13 +7,8 @@ public record CreateWalletRequest(Guid PlayerId, Currency Currency);
 
 public record DepositRequest(decimal Amount);
 
-public record ApplyFundsRequest(decimal Amount, FundsOperation Operation);
+// StrategyKey: "add" | "subtract" | "forcesubtract" — resolved to an IFundsStrategy by the factory.
+public record AdjustBalanceRequest(decimal Amount, string StrategyKey);
 
-public record SetBlockedRequest(bool Blocked);
-
-// Response DTO — the shape the client receives. Never expose the domain entity directly.
-public record WalletResponse(Guid Id, Guid PlayerId, string Currency, decimal Balance, bool IsBlocked)
-{
-	public static WalletResponse From(Wallet wallet) =>
-		new(wallet.Id, wallet.PlayerId, wallet.Currency.ToString(), wallet.Balance, wallet.IsBlocked);
-}
+// The response shape is the Application-layer WalletDto (returned by the MediatR handlers),
+// so the controller no longer maps anything itself.

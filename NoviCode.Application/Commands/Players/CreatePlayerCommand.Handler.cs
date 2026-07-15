@@ -1,26 +1,24 @@
-﻿using MediatR;
-using NoviCode.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using MediatR;
+using NoviCode.Dtos;
+using NoviCode.Services.Infrastructure;
 
-namespace NoviCode.Commands.Players
+namespace NoviCode.Commands.Players;
+
+public class CreatePlayerCommandHandler : IRequestHandler<CreatePlayerCommand, PlayerDto>
 {
-    public class CreatePlayerCommandHandler : IRequestHandler<CreatePlayerCommand, Guid>
-    {
-        private readonly ICreatePlayerPersistence _createPlayerPersistence;
+	private readonly ICreatePlayerPersistence _persistence;
 
-        public CreatePlayerCommandHandler(ICreatePlayerPersistence persistence)
-        {
-            _createPlayerPersistence = persistence;
-        }
+	public CreatePlayerCommandHandler(ICreatePlayerPersistence persistence)
+	{
+		_persistence = persistence;
+	}
 
-        public async Task<Guid> Handle(CreatePlayerCommand request, CancellationToken cancellationToken)
-        {
-            var player = Player.CreateNew(request.name);
-            
-            await _createPlayerPersistence.Persist(player);
-            return player.Id;
-        }
-    }
+	public async Task<PlayerDto> Handle(CreatePlayerCommand request, CancellationToken cancellationToken)
+	{
+		var player = Player.CreateNew(Guid.NewGuid(), request.Name, request.Score);
+
+		await _persistence.Add(player);
+
+		return PlayerDto.From(player);
+	}
 }

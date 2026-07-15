@@ -1,18 +1,24 @@
 using MediatR;
-using NoviCode.Infrastructure;
+using NoviCode.Dtos;
+using NoviCode.Services.Infrastructure;
 
-namespace NoviCode.Queries.Players
+namespace NoviCode.Queries.Players;
+
+public class GetAllPlayersQueryHandler : IRequestHandler<GetAllPlayersQuery, IReadOnlyCollection<PlayerDto>>
 {
-    public class GetAllPlayersQueryHandler : IRequestHandler<GetAllPlayersQuery, IReadOnlyList<Player>>
-    {
-        private readonly IPlayerReadPersistence _persistence;
+	private readonly IGetAllPlayersPersistence _persistence;
 
-        public GetAllPlayersQueryHandler(IPlayerReadPersistence persistence)
-        {
-            _persistence = persistence;
-        }
+	public GetAllPlayersQueryHandler(IGetAllPlayersPersistence persistence)
+	{
+		_persistence = persistence;
+	}
 
-        public Task<IReadOnlyList<Player>> Handle(GetAllPlayersQuery request, CancellationToken cancellationToken)
-            => _persistence.GetAll();
-    }
+	public async Task<IReadOnlyCollection<PlayerDto>> Handle(GetAllPlayersQuery request, CancellationToken cancellationToken)
+	{
+		var players = await _persistence.GetAll();
+
+		return players
+			.Select(PlayerDto.From)
+			.ToArray();
+	}
 }

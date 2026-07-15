@@ -9,34 +9,35 @@ namespace NoviCode.Api;
 [Route("players")]
 public class PlayersController : ControllerBase
 {
-	private readonly IMediator _mediator;
+	// Like WalletsController, this depends only on the mediator — every action is a query/command.
+	private readonly ISender _mediator;
 
-	public PlayersController(IMediator mediator) => _mediator = mediator;
+	public PlayersController(ISender mediator) => _mediator = mediator;
 
-	// POST /players — create a player. Caching + logging are applied by decorators, not here.
+	// POST /players — create a player.
 	[HttpPost]
 	public async Task<IActionResult> Create([FromBody] CreatePlayerRequest request, CancellationToken cancellationToken)
 	{
-		Guid id;
 		try
 		{
-			id = await _mediator.Send(new CreatePlayerCommand(request.Name, request.Score), cancellationToken);
+			var player = await _mediator.Send(new CreatePlayerCommand(request.Name, request.Score), cancellationToken);
+
+			return CreatedAtAction(nameof(GetById), new { Id = player.Id }, player);
 		}
 		catch (ArgumentException ex)
 		{
 			// Empty name / negative score → 400.
 			return BadRequest(new { error = ex.Message });
 		}
-
-		return Created($"/players/{id}", null);
 	}
 
-	// GET /players/{id} — 200 or 404.
-	[HttpGet("{id:guid}", Name = "GetPlayerById")]
+	// GET /players/{id} — 200 or 404 (goes through the GetPlayerQuery handler).
+	[HttpGet("{id:guid}")]
 	public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
 	{
-		var player = await _mediator.Send(new GetPlayerByIdQuery(id), cancellationToken);
-		return player is null ? NotFound() : Ok(PlayerResponse.From(player));
+		var player = await _mediator.Send(new GetPlayerQuery(id), cancellationToken);
+
+		return player is null ? NotFound() : Ok(player);
 	}
 
 	// GET /players — list all players.
@@ -44,6 +45,24 @@ public class PlayersController : ControllerBase
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
 	{
 		var players = await _mediator.Send(new GetAllPlayersQuery(), cancellationToken);
-		return Ok(players.Select(PlayerResponse.From));
+		return Ok(players);
+	}
+
+	// PUT /players/{id}/score — update a player's score.
+	[HttpPut("{id:guid}/score")]
+	public async Task<IActionResult> UpdatePlayerScore(Guid id, UpdatePlayerScore request, CancellationToken cancellationToken)
+	{
+		await _mediator.Send(new UpdatePlayerScoreCommand(id, request.Score), cancellationToken);
+
+		return Ok();
+	}
+
+	// DELETE /players/{id} — delete a player.
+	[HttpDelete]
+	public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+	{
+		await _mediator.Send(new DeletePlayerCommand(id), cancellationToken);
+
+		return Ok();
 	}
 }
