@@ -4,4 +4,5 @@
   <Project Path="NoviCode.Domain/NoviCode.Domain.csproj" />
   <Project Path="NoviCode.Gateway/NoviCode.Gateway.csproj" Id="2c7c9c47-f4e3-4aa8-aa2a-96b3c89c3d6d" />
   <Project Path="NoviCode.Infrastructure/NoviCode.Infrastructure.csproj" />
+  <Project Path="NoviCode.Tests/NoviCode.Tests.csproj" Id="45153b3d-646d-43e0-8ad6-802bcb1f1888" />
 </Solution>

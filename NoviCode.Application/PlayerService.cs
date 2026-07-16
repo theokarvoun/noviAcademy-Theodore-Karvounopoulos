@@ -39,16 +39,16 @@ public class PlayerService : IPlayerService
 
 	public async Task<Player?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
-		if (_cache.TryGet(PlayerKey(id), out Player? cached) && cached is not null)
-		{
-			_logger.LogInformation("Cache HIT  player {PlayerId}", id);
-			return cached;
-		}
+		//if (_cache.TryGet(PlayerKey(id), out Player? cached) && cached is not null)
+		//{
+		//	_logger.LogInformation("Cache HIT  player {PlayerId}", id);
+		//	return cached;
+		//}
 
 		_logger.LogInformation("Cache MISS player {PlayerId} — loading from database", id);
 		var player = await _players.GetByIdAsync(id, cancellationToken);
-		if (player is not null)
-			_cache.Set(PlayerKey(id), player, Ttl);
+		//if (player is not null)
+			//_cache.Set(PlayerKey(id), player, Ttl);
 		return player;
 	}
 
